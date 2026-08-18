@@ -19,10 +19,11 @@
 
 <!-- ═══════════════ HUD ═══════════════ -->
 <!--START_SECTION:hud-->
-<img src="https://img.shields.io/badge/LV-24-FFB000?style=for-the-badge&labelColor=0D1117&logo=gamejolt&logoColor=FFB000" alt="level" />
-<img src="https://img.shields.io/badge/CLASS-MULTICLASS-A78BFA?style=for-the-badge&labelColor=0D1117" alt="class" />
-<img src="https://img.shields.io/badge/REGION-BANGLADESH-4ADE80?style=for-the-badge&labelColor=0D1117" alt="region" />
-<img src="https://img.shields.io/badge/QUEST-FINAL_YEAR-22D3EE?style=for-the-badge&labelColor=0D1117" alt="quest" />
+<img src="https://img.shields.io/badge/LV-4-FFB000?style=for-the-badge&labelColor=0D1117&logo=gamejolt&logoColor=white" alt="lv" />
+<img src="https://img.shields.io/badge/XP-1,308-A78BFA?style=for-the-badge&labelColor=0D1117" alt="xp" />
+<img src="https://img.shields.io/badge/STREAK-1d-F87171?style=for-the-badge&labelColor=0D1117&logo=fireship&logoColor=white" alt="streak" />
+<img src="https://img.shields.io/badge/QUESTS-10-4ADE80?style=for-the-badge&labelColor=0D1117&logo=github&logoColor=white" alt="quests" />
+<img src="https://img.shields.io/badge/STARS-1-22D3EE?style=for-the-badge&labelColor=0D1117&logo=apachespark&logoColor=white" alt="stars" />
 <!--END_SECTION:hud-->
 
 <img src="https://komarev.com/ghpvc/?username=CodeWithYeasin&label=PLAYERS%20MET&color=ffb000&style=for-the-badge" alt="visitors" />
@@ -45,9 +46,15 @@
 
 <!--START_SECTION:xp-->
 ```text
-   HP  ████████████████████░░░░░  80/100   sleep_scheduler still unpatched
-   MP  ██████████████████████░░░  88/100   curiosity regenerates on its own
-   XP  ███████████████████░░░░░░  LV 24 → 25   ·   1,240 / 1,600 XP
+   HP  ████████████████░░░░░░░░░   62/100   sleep_scheduler still unpatched
+   MP  ██████████████████░░░░░░░   73/100   7 languages in the spellbook
+   XP  ░░░░░░░░░░░░░░░░░░░░░░░░░  LV 4 → 5   ·   8 / 1,200 XP
+
+   commits 96   ·   PRs 4   ·   issues 0   ·   reviews 0
+   repos 10   ·   stars 1   ·   forks 0   ·   party 1
+   best streak 3d   ·   last 30 days 14 contributions
+
+   ▸ autosaved 18 Aug 2026 · 07:43 UTC
 ```
 <!--END_SECTION:xp-->
 
