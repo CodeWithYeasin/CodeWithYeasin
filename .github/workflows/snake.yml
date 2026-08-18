@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────────────
+#  Save this file at:  .github/workflows/snake.yml
+#  in your CodeWithYeasin/CodeWithYeasin repo.
+#
+#  Then: Settings → Actions → General → Workflow permissions
+#        → select "Read and write permissions" → Save
+#
+#  Run it once manually (Actions tab → Generate Snake → Run workflow),
+#  then uncomment the snake block in README.md.
+# ─────────────────────────────────────────────────────────────────────
+
+name: Generate Snake
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"   # twice a day
+  workflow_dispatch:          # lets you run it manually
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Generate snake animation
+        uses: Platane/snk/svg-only@v3
+        with:
+          github_user_name: CodeWithYeasin
+          outputs: |
+            dist/snake.svg?palette=github-dark&color_snake=#22D3EE&color_dots=#0D1117,#1E3A8A,#7C3AED,#22D3EE,#A78BFA
+
+      - name: Push to output branch
+        uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
