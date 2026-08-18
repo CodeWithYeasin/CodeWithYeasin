@@ -1,12 +1,10 @@
 <!--
-╔══════════════════════════════════════════════════════════════════════════════╗
-║  YEASIN.EXE  ·  AN RPG-STYLE GITHUB PROFILE                                  ║
-║  Repo: github.com/CodeWithYeasin/CodeWithYeasin  (public, name == username)   ║
-║                                                                              ║
-║  ✏️  EDIT markers show where to put your real details.                        ║
-║  🤖  <!--START_SECTION:*--> blocks are rewritten by .github/workflows/        ║
-║      profile-stats.yml — do not hand-edit inside them.                        ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+  YEASIN.EXE · an RPG-style GitHub profile
+  Repo: github.com/CodeWithYeasin/CodeWithYeasin  (public, name must equal username)
+
+  "EDIT" markers show where to put your real details.
+  Any block between START_SECTION and END_SECTION comments is rewritten by
+  .github/workflows/profile-stats.yml — do not hand-edit inside those.
 -->
 
 <div align="center">
@@ -32,24 +30,13 @@
 
 </div>
 
-```console
-╭──────────────────────────────────────────────────────────────────────────╮
-│  SAVE FILE 01                                              [ AUTOSAVING ] │
-├──────────────────────────────────────────────────────────────────────────┤
-│  PLAYER    MD YEASIN ARAFAT                    PLAYTIME   ~4 yrs, 0 regret│
-│  CLASS     ML Archmage / Security Rogue        DIFFICULTY  Self-Taught+   │
-│  ORIGIN    A secondhand laptop with a tired fan                          │
-│  PARTY     coffee_daemon · rubber_duck · 2AM                             │
-╰──────────────────────────────────────────────────────────────────────────╯
-```
+<div align="center">
 
-<!--START_SECTION:xp-->
-```text
-   HP  ████████████████████░░░░░  80/100   sleep_scheduler still unpatched
-   MP  ██████████████████████░░░  88/100   curiosity regenerates on its own
-   XP  ███████████████████░░░░░░  LV 24 → 25   ·   1,240 / 1,600 XP
-```
-<!--END_SECTION:xp-->
+<!--START_SECTION:save-->
+<img src="assets/hud.svg" alt="save file card — level, HP, MP and XP bars, and career totals" width="100%" />
+<!--END_SECTION:save-->
+
+</div>
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0:0D1117,50:FFB000,100:0D1117&height=3&section=header" width="100%" />
 
@@ -112,7 +99,7 @@ Three branches, one mana pool. They overlap more than the course catalogue admit
 
 ```mermaid
 flowchart TD
-    ROOT([ 🎮 YEASIN · LV 24 ]):::root
+    ROOT([ 🎮 YEASIN ]):::root
 
     ROOT --> AI[ 🔮 ARCANE<br/>machine learning ]:::t1
     ROOT --> SEC[ 🗡️ SHADOW<br/>security ]:::t2
@@ -252,17 +239,9 @@ Loot collected across the campaign. Rarity is honest, not flattering.
 | 🎓 | **`FINAL YEAR THESIS`** | Prove the thing, then defend the thing | `+2000 XP` | ⚡ IN PROGRESS |
 
 <!--
-  ✏️ NICER VERSION — swap REPO-NAME for real repos, then delete these two
-  comment lines so the pinned cards render.
-
-<div align="center">
-<a href="https://github.com/CodeWithYeasin/REPO-NAME">
-  <img src="https://github-readme-stats.vercel.app/api/pin/?username=CodeWithYeasin&repo=REPO-NAME&hide_border=true&bg_color=0D1117&title_color=FFB000&text_color=C9D1D9&icon_color=A78BFA" />
-</a>
-<a href="https://github.com/CodeWithYeasin/REPO-NAME-2">
-  <img src="https://github-readme-stats.vercel.app/api/pin/?username=CodeWithYeasin&repo=REPO-NAME-2&hide_border=true&bg_color=0D1117&title_color=FFB000&text_color=C9D1D9&icon_color=A78BFA" />
-</a>
-</div>
+  Optional: GitHub's own pinned-repo cards render as images from a third-party
+  service that rate-limits hard. If you want repo cards here, prefer linking the
+  repos directly in the table above — a dead link never happens, a dead image does.
 -->
 
 ### `🌙 SIDE QUESTS`
@@ -310,11 +289,7 @@ Every one of these took more attempts than I'd like on record.
 
 ## 🏆 `ACT VI` — ACHIEVEMENTS
 
-<div align="center">
-
-<img src="https://github-profile-trophy.vercel.app/?username=CodeWithYeasin&theme=matrix&no-frame=true&no-bg=true&column=7&margin-w=8&margin-h=8" alt="trophies" />
-
-</div>
+Unlocked the hard way. Rarity is honest, not flattering.
 
 | | ACHIEVEMENT | HOW IT UNLOCKED | RARITY |
 |:--:|:--|:--|:--:|
@@ -332,31 +307,19 @@ Every one of these took more attempts than I'd like on record.
 ## 📊 `ACT VII` — SCOREBOARD
 
 Numbers don't prove the code was good. They do prove I kept showing up.
+These cards are drawn from my own data by the workflow in this repo — no
+third-party stats service to rate-limit me into a broken image.
 
 <div align="center">
 
-<img height="170em" src="https://github-readme-stats.vercel.app/api?username=CodeWithYeasin&show_icons=true&hide_border=true&include_all_commits=true&count_private=true&rank_icon=github&bg_color=0D1117&title_color=FFB000&text_color=C9D1D9&icon_color=A78BFA&ring_color=FFB000" alt="stats" />
-<img height="170em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=CodeWithYeasin&layout=compact&hide_border=true&langs_count=8&bg_color=0D1117&title_color=FFB000&text_color=C9D1D9" alt="top languages" />
+<!--START_SECTION:cards-->
+<img src="assets/stats.svg" alt="scoreboard: commits, pull requests, repos, stars" width="48%" />
+<img src="assets/languages.svg" alt="languages by share of code" width="48%" />
 
-<br/><br/>
-
-<img src="https://streak-stats.demolab.com?user=CodeWithYeasin&hide_border=true&background=0D1117&stroke=1F2937&ring=FFB000&fire=F87171&currStreakLabel=FFB000&sideLabels=C9D1D9&currStreakNum=FFFFFF&sideNums=FFFFFF&dates=8B949E" alt="streak" />
-
-<br/><br/>
-
-<img width="100%" src="https://github-readme-activity-graph.vercel.app/graph?username=CodeWithYeasin&bg_color=0D1117&color=FFB000&line=A78BFA&point=FFFFFF&area=true&area_color=4C1D95&hide_border=true&custom_title=XP%20GAINED%20OVER%20TIME" alt="activity graph" />
+<img src="assets/activity.svg" alt="commit heatmap for the last 12 months" width="100%" />
+<!--END_SECTION:cards-->
 
 </div>
-
-<!--
-  ✏️ WAKATIME — shows real coding hours as a "playtime" panel.
-  Sign up at wakatime.com, make your profile public, then delete these two
-  comment lines.
-
-<div align="center">
-<img src="https://github-readme-stats.vercel.app/api/wakatime?username=YOUR_WAKATIME_USER&layout=compact&hide_border=true&bg_color=0D1117&title_color=FFB000&text_color=C9D1D9&custom_title=PLAYTIME%20BY%20WEAPON" alt="wakatime" />
-</div>
--->
 
 <!--
   🐍 THE GRIND — contribution snake. Needs .github/workflows/snake.yml to run

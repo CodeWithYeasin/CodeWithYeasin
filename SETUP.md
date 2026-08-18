@@ -9,6 +9,8 @@ game/preview.gif                    ← the animated preview shown in the README
 game/test.mjs                       ← Playwright playthrough test (optional)
 README-game.md                      ← the profile itself
 scripts/update_stats.py             ← XP engine (real GitHub stats → RPG numbers)
+scripts/render_cards.py             ← draws the SVG stat cards (no third-party service)
+assets/*.svg                        ← the cards themselves, regenerated every run
 scripts/adventure.py                ← the playable game engine
 scripts/adventure_scenes.json       ← the story (edit this to change the game)
 scripts/selftest.py                 ← offline checks, run before you push
@@ -190,8 +192,17 @@ the markers must be intact. Don't edit between `<!--START_SECTION:-->` and
 **Game doesn't respond** — the workflow only fires on issues labelled `adventure`
 or titled with 🎮. Check the Actions tab for a skipped run.
 
-**Streak card is blank** — `streak-stats.demolab.com` rate-limits. It comes back.
-Self-host it if it bothers you.
+**Cards say "awaiting first XP Engine run"** — that's the seed state. Run the
+workflow once (Actions → ⚡ XP Engine → Run workflow) and they fill in with your
+real numbers.
+
+**Cards look stale after a run** — GitHub caches README images through its image
+proxy. The engine appends `?v=<timestamp>` to each `src` to defeat that, so a
+refresh should show the new numbers. Give it a minute.
+
+**Your name is wrong on the save-file card** — it defaults to your GitHub login.
+Set `PLAYER_NAME` / `PLAYER_CLASS` / `PLAYER_ORIGIN` in
+`.github/workflows/profile-stats.yml`.
 
 **Mermaid diagram shows as raw text** — GitHub only renders mermaid in `.md` files
 on github.com, not in some third-party viewers. Check on github.com itself.

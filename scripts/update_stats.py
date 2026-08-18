@@ -91,10 +91,12 @@ def gql(token: str, login: str) -> dict:
 
 
 def level_for(xp: int) -> tuple[int, int, int]:
-    """Triangular curve. Returns (level, xp_into_level, xp_needed_for_level)."""
+    """Gentle triangular curve — cumulative XP for level n is 12*n*(n+1), so a
+    few years of real student activity lands in the teens rather than at LV 3.
+    Returns (level, xp_into_level, xp_needed_for_level)."""
     lvl, floor_xp = 1, 0
     while True:
-        need = 100 * lvl + 50 * lvl * lvl  # cost of lvl -> lvl+1
+        need = 24 * lvl                     # cost of lvl -> lvl+1
         if xp < floor_xp + need:
             return lvl, xp - floor_xp, need
         floor_xp += need
@@ -195,6 +197,54 @@ def main() -> int:
     mp = max(40, min(100, 45 + len(langs) * 4))
 
     stamp = datetime.now(timezone.utc).strftime("%d %b %Y · %H:%M UTC")
+    hp_note = "sleep_scheduler still unpatched" if hp < 90 else "fully rested, suspiciously"
+    mp_note = f"{len(langs)} languages in the spellbook"
+
+    # ── draw our own SVG cards from this data ────────────────────────────────
+    lang_bytes: dict[str, int] = {}
+    for r in repos:
+        for e in (r.get("languages") or {}).get("edges", []):
+            lang_bytes[e["node"]["name"]] = lang_bytes.get(e["node"]["name"], 0) + e["size"]
+    ranked = sorted(lang_bytes.items(), key=lambda kv: -kv[1])
+
+    week_cols = [[dd["contributionCount"] for dd in w["contributionDays"]]
+                 for w in cc["contributionCalendar"]["weeks"]]
+    ticks, seen_months = [], set()
+    for wi, w in enumerate(cc["contributionCalendar"]["weeks"]):
+        first = w["contributionDays"][0]["date"]
+        mon = first[:7]
+        if mon not in seen_months:
+            seen_months.add(mon)
+            label = datetime.fromisoformat(first).strftime("%b")
+            if len(ticks) == 0 or wi - ticks[-1][1] >= 4:
+                ticks.append((label, wi))
+
+    card_data = {
+        "player": os.environ.get("PLAYER_NAME", login.upper()),
+        "klass": os.environ.get("PLAYER_CLASS", "ML ARCHMAGE / SECURITY ROGUE"),
+        "origin": os.environ.get("PLAYER_ORIGIN", "origin: a secondhand laptop with a tired fan"),
+        "stamp": stamp.upper(),
+        "level": lvl, "xp_into": into, "xp_need": need,
+        "hp": hp, "mp": mp,
+        "hp_note": hp_note, "mp_note": mp_note,
+        "commits": commits, "prs": prs, "issues": issues, "reviews": reviews,
+        "repos": repo_count, "stars": stars, "forks": forks, "followers": followers,
+        "streak": cur_streak, "best_streak": best_streak,
+        "total_year": cc["contributionCalendar"]["totalContributions"],
+        "languages": ranked[:6],
+        "lang_total": sum(lang_bytes.values()) or 1,
+        "weeks": week_cols,
+        "month_ticks": ticks,
+    }
+    try:
+        from render_cards import render_all
+    except ImportError:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from render_cards import render_all
+    written = render_all(card_data, os.environ.get("ASSET_DIR", "assets"))
+    print("cards:", written)
+
+    bust = datetime.now(timezone.utc).strftime("%Y%m%d%H%M")
 
     # ── HUD ───────────────────────────────────────────────────────────────────
     def badge(label: str, value: str, color: str, logo: str = "") -> str:
@@ -217,28 +267,21 @@ def main() -> int:
         ]
     )
 
-    # ── XP / HP / MP panel ────────────────────────────────────────────────────
-    hp_note = "sleep_scheduler still unpatched" if hp < 90 else "fully rested, suspiciously"
-    mp_note = f"{len(langs)} languages in the spellbook"
-    xp_panel = "\n".join(
-        [
-            "```text",
-            f"   HP  {bar(hp, 100)}  {hp:>3}/100   {hp_note}",
-            f"   MP  {bar(mp, 100)}  {mp:>3}/100   {mp_note}",
-            f"   XP  {bar(into, need)}  LV {lvl} → {lvl + 1}   ·   {into:,} / {need:,} XP",
-            "",
-            f"   commits {commits:,}   ·   PRs {prs:,}   ·   issues {issues:,}   ·   "
-            f"reviews {reviews:,}",
-            f"   repos {repo_count}   ·   stars {stars}   ·   forks {forks}   ·   "
-            f"party {followers}",
-            f"   best streak {best_streak}d   ·   last 30 days {last_30} contributions",
-            "",
-            f"   ▸ autosaved {stamp}",
-            "```",
-        ]
+    # ── the hero save-file card, and the scoreboard trio ─────────────────────
+    save_card = (
+        f'<img src="assets/hud.svg?v={bust}" alt="save file — LV {lvl}, '
+        f'{xp:,} XP, {cur_streak} day streak" width="100%" />'
     )
+    scoreboard = "\n".join([
+        f'<img src="assets/stats.svg?v={bust}" alt="scoreboard: {commits:,} commits, '
+        f'{prs} pull requests, {repo_count} repos, {stars} stars" width="48%" />',
+        f'<img src="assets/languages.svg?v={bust}" alt="languages by share of code" width="48%" />',
+        "",
+        f'<img src="assets/activity.svg?v={bust}" alt="commit heatmap for the last 12 months — '
+        f'{card_data["total_year"]:,} contributions, {cur_streak} day current streak" width="100%" />',
+    ])
 
-    replacements = {"hud": hud, "xp": xp_panel}
+    replacements = {"hud": hud, "save": save_card, "cards": scoreboard}
 
     targets = [
         f.strip()
