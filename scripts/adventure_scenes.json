@@ -1,0 +1,231 @@
+{
+  "title": "THE 3AM INCIDENT",
+  "start": "entrance",
+  "start_hp": 2,
+  "nodes": {
+    "entrance": {
+      "art": "SERVER ROOM · 03:04",
+      "text": "One rack is humming at the wrong pitch. The logs stopped writing forty minutes ago and the model dashboard is still green, which is worse than red.\n\nYour badge works. Nobody else is on the floor.",
+      "options": {
+        "A": {
+          "label": "Tail the logs anyway. Something is still writing somewhere.",
+          "next": "logs"
+        },
+        "B": {
+          "label": "Pull the rack's network cable. Contain first, ask later.",
+          "next": "contain",
+          "hp": -1
+        },
+        "C": {
+          "label": "Open the model dashboard. See what it has been predicting.",
+          "next": "dashboard"
+        }
+      }
+    },
+    "logs": {
+      "art": "TERMINAL · tail -f",
+      "text": "The application log is dead, but the kernel ring buffer is very much alive. Somebody's process is being OOM-killed on a loop, restarting, and getting killed again.\n\nBetween two kills, a single line: `auth: accepted publickey for svc_train from 10.0.4.19`.\n\nThat service account should not have a key. And 10.0.4.19 is not a training node.",
+      "options": {
+        "A": {
+          "label": "Trace 10.0.4.19. Find out what it is before touching anything.",
+          "next": "trace"
+        },
+        "B": {
+          "label": "Revoke the key right now. Ask questions after.",
+          "next": "revoke",
+          "hp": -1
+        },
+        "C": {
+          "label": "Grep the model checkpoints for recent writes.",
+          "next": "checkpoints"
+        }
+      }
+    },
+    "contain": {
+      "art": "RACK 4 · LINK DOWN",
+      "text": "The cable comes out with a click that sounds much too loud. The rack goes dark on the network. Three dashboards go red within nine seconds — you just took production with it.\n\nThe hum stops. Whatever was running, stopped.\n\nAnd so did your evidence.",
+      "options": {
+        "A": {
+          "label": "Image the disk before anything reboots. Forensics first.",
+          "next": "forensics"
+        },
+        "B": {
+          "label": "Start yanking the other racks too, before whatever this is spreads.",
+          "next": "lateral",
+          "hp": -1
+        },
+        "C": {
+          "label": "Wake the on-call lead. This is above your pay grade.",
+          "next": "escalate"
+        }
+      }
+    },
+    "dashboard": {
+      "art": "MODEL DASH · v2.4.1",
+      "text": "Every metric is green. Accuracy 0.991. Latency flat. Throughput normal.\n\nThen you scroll to the confusion matrix and one class has quietly absorbed 40% of all predictions in the last six hours. The class is `benign`.\n\nThe model has learned to say everything is fine.",
+      "options": {
+        "A": {
+          "label": "Pull the last week of training data and diff it.",
+          "next": "poison"
+        },
+        "B": {
+          "label": "Roll back to v2.3.9 immediately.",
+          "next": "rollback",
+          "hp": -1
+        },
+        "C": {
+          "label": "Check the input pipeline. Maybe the data never arrived.",
+          "next": "pipeline"
+        }
+      }
+    },
+    "trace": {
+      "art": "10.0.4.19",
+      "text": "It's a CI runner. Decommissioned in March, never actually removed from the network. Someone's build job has been living on it for five months with a key nobody rotated.\n\nIt has been pushing artifacts. Into the model registry.",
+      "options": {
+        "A": {
+          "label": "Diff the artifacts against the last known-good build.",
+          "next": "poison"
+        },
+        "B": {
+          "label": "Snapshot the runner, then isolate it. Evidence, then containment.",
+          "next": "forensics"
+        }
+      }
+    },
+    "revoke": {
+      "art": "KEY REVOKED",
+      "text": "The key is gone in four seconds. So is your visibility. Whatever was connecting simply stops connecting, and now you have no idea what it was doing or how long it had been doing it.\n\nThe OOM loop stops too. The room gets quiet in a way that does not feel like winning.",
+      "options": {
+        "A": {
+          "label": "Reconstruct the timeline from what's left of the logs.",
+          "next": "escalate"
+        },
+        "B": {
+          "label": "Check the model registry for anything that key touched.",
+          "next": "poison"
+        }
+      }
+    },
+    "checkpoints": {
+      "art": "/mnt/models",
+      "text": "`v2.4.1.pt` — modified 41 minutes ago. The deploy that shipped it ran nine days ago.\n\nSomething rewrote a production model in place. No version bump, no signature, no trace in the deploy log.\n\nThe file is 300 bytes larger than the one in the registry.",
+      "options": {
+        "A": {
+          "label": "Diff the weights against the registry copy.",
+          "next": "poison"
+        },
+        "B": {
+          "label": "Hash every model on the box. Find out how far this goes.",
+          "next": "goodending_forensic"
+        }
+      }
+    },
+    "forensics": {
+      "art": "dd · 2.4 TB",
+      "text": "You image the disk before anything reboots. It takes ninety minutes you technically do not have, and it is the reason anyone will ever know what happened here.\n\nIn the memory dump: a process that mapped itself over the inference server and rewrote incoming feature vectors on the way in. Not the model. The *input*.",
+      "options": {
+        "A": {
+          "label": "Follow the rewritten features back to their source.",
+          "next": "goodending_ghost"
+        },
+        "B": {
+          "label": "Write it all up now, while it's fresh. Wake the team after.",
+          "next": "goodending_forensic"
+        }
+      }
+    },
+    "lateral": {
+      "art": "nmap · 10.0.0.0/16",
+      "text": "Rack 4 wasn't special. Racks 2, 6 and 9 have the same process, the same parent, the same start time — 02:19, all four within the same second.\n\nSomething orchestrated this. It didn't spread. It *arrived*.",
+      "options": {
+        "A": {
+          "label": "Find what talked to all four at 02:19.",
+          "next": "goodending_ghost"
+        },
+        "B": {
+          "label": "Escalate. Four racks is an incident, not a ticket.",
+          "next": "escalate"
+        }
+      }
+    },
+    "escalate": {
+      "art": "PAGER · 03:41",
+      "text": "You wake the on-call lead. She picks up on the second ring, already awake, because of course she is.\n\nYou explain it in ninety seconds without adjectives. She says, 'Good. Don't touch anything else. I'm twelve minutes out.'\n\nIt is the correct call. It is also the end of your part in the story.",
+      "ending": {
+        "rank": "B",
+        "title": "PAGER DUTY",
+        "text": "You escalated cleanly and early. Nothing was lost that couldn't be recovered, and nothing was learned that wasn't already known.\n\nSafe. Correct. Slightly unsatisfying — which is what most real incidents feel like."
+      }
+    },
+    "poison": {
+      "art": "git diff · training_set/",
+      "text": "Two thousand rows appended over nine days. Never more than three hundred at a time. Every one labelled `benign`. Every one crafted to sit just inside the decision boundary and drag it, slowly, in one direction.\n\nNobody broke in. They just taught your model to look away.",
+      "options": {
+        "A": {
+          "label": "Retrain clean, then build a detector for the pattern.",
+          "next": "goodending_poison"
+        },
+        "B": {
+          "label": "Find who had write access to that bucket.",
+          "next": "goodending_ghost"
+        },
+        "C": {
+          "label": "Roll back and call it handled. It's 4AM.",
+          "next": "rollback"
+        }
+      }
+    },
+    "rollback": {
+      "art": "DEPLOY · v2.3.9",
+      "text": "The rollback is clean. Metrics recover. The dashboard goes back to a green you now know means nothing.\n\nYou go home at 05:20. It comes back on Thursday, wearing a different version number, and this time it has a nine-day head start on your attention.",
+      "ending": {
+        "rank": "C",
+        "title": "3AM RESTART",
+        "text": "You treated a symptom and slept soundly for exactly four days.\n\nRolling back fixes the artifact. It never fixes the thing that wrote the artifact."
+      }
+    },
+    "pipeline": {
+      "art": "kafka · feature-stream",
+      "text": "The pipeline is healthy. Suspiciously healthy — zero dropped messages, zero retries, for six hours straight. That has never happened in the history of this system.\n\nThe consumer lag graph is a perfectly flat line. Somebody is replaying the same window over and over, and the model is happily scoring the same six hours forever.",
+      "options": {
+        "A": {
+          "label": "Trace who is producing the replay.",
+          "next": "goodending_ghost"
+        },
+        "B": {
+          "label": "Kill the consumer group, then check whether the other racks match.",
+          "next": "lateral"
+        }
+      }
+    },
+    "goodending_ghost": {
+      "ending": {
+        "rank": "S+",
+        "title": "GHOST IN THE PIPELINE",
+        "text": "You followed it all the way down: a decommissioned CI runner, a key nobody rotated, and a job that had been quietly rewriting feature vectors in flight since March.\n\nNo alert would ever have caught it. Every metric it touched stayed green on purpose. It was found because one person at 3AM refused to accept a number that looked too good.\n\n**TRUE ENDING.** The postmortem you write becomes required reading for the next three hires."
+      }
+    },
+    "goodending_poison": {
+      "ending": {
+        "rank": "S",
+        "title": "THE POISONED WELL",
+        "text": "You found the data poisoning, retrained on a verified snapshot, and then did the part most people skip: you built the detector that catches the next one.\n\nTwo thousand rows, nine days, one slowly-bending decision boundary. Now it trips an alarm at row forty.\n\nYou get to sleep at 06:00 knowing the fix outlives the incident."
+      }
+    },
+    "goodending_forensic": {
+      "ending": {
+        "rank": "A",
+        "title": "THE PATIENT ANALYST",
+        "text": "You imaged before you rebooted, hashed before you deleted, and wrote it down while it was still fresh.\n\nYou did not catch the attacker. You caught something better: a complete, honest record of exactly what happened, which is the only reason the team caught them on Tuesday.\n\nUnglamorous. Decisive. The kind of work that never makes a highlight reel."
+      }
+    },
+    "death": {
+      "ending": {
+        "rank": "F",
+        "title": "YOU DIED",
+        "text": "Too many fast moves in the dark. Evidence gone, timeline unreconstructable, root cause unknown.\n\nThe incident closes as 'transient'. It is not transient.\n\n> *Speed is a defense. Panic wearing speed's clothes is not.*"
+      }
+    }
+  }
+}

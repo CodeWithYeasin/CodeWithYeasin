@@ -1,0 +1,37 @@
+name: 🎮 Adventure Engine
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: adventure-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  play:
+    # only react to game issues, and never to our own bot comments
+    if: >
+      github.event.sender.type != 'Bot' &&
+      (
+        contains(github.event.issue.title, '🎮') ||
+        contains(github.event.issue.labels.*.name, 'adventure')
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Render next scene
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/adventure.py

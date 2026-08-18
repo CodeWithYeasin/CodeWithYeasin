@@ -1,0 +1,39 @@
+name: 🎮 Play — The 3AM Incident
+description: Start a run. Pick your first move; the bot renders the rest.
+title: "🎮 New run"
+labels: ["adventure"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ```text
+        ╭──────────────────────────────────────────────────────────────────────╮
+        │  THE 3AM INCIDENT                                    a text adventure│
+        ╰──────────────────────────────────────────────────────────────────────╯
+        ```
+        **SERVER ROOM · 03:04**
+
+        One rack is humming at the wrong pitch. The logs stopped writing forty
+        minutes ago and the model dashboard is still green, which is worse than red.
+
+        Your badge works. Nobody else is on the floor.
+
+        > Six endings. One of them is `S+`. Two lives — reckless moves cost you one.
+
+  - type: dropdown
+    id: first-move
+    attributes:
+      label: Your first move
+      description: The bot replies with the next scene in a few seconds.
+      options:
+        - "A — Tail the logs anyway. Something is still writing somewhere."
+        - "B — Pull the rack's network cable. Contain first, ask later."
+        - "C — Open the model dashboard. See what it has been predicting."
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        <sub>After you submit, reply to the issue with a single letter to keep going.
+        The run closes itself when you reach an ending.</sub>
