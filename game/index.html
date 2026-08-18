@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>YEASIN.EXE — THE ARCHIVE</title>
+<meta name="description" content="A playable pixel RPG. Explore the archive, talk to the terminals, and find out who Md Yeasin Arafat is." />
+<meta property="og:title" content="YEASIN.EXE — THE ARCHIVE" />
+<meta property="og:description" content="A playable pixel RPG about a CSE final-year student who builds models and breaks systems." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#05070d; --ink:#e8eef7; --dim:#8b96ad;
+    --gold:#ffb000; --violet:#a78bfa; --cyan:#22d3ee; --green:#4ade80; --red:#f87171;
+    --px:'Press Start 2P', ui-monospace, monospace;
+    --mono:'JetBrains Mono', ui-monospace, monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--mono);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden; touch-action:none; -webkit-user-select:none; user-select:none;
+  }
+  #shell{position:relative; width:100vw; height:100vh; max-width:100vw; overflow:hidden;}
+  canvas{
+    position:absolute; inset:0; width:100%; height:100%;
+    image-rendering:pixelated; image-rendering:crisp-edges;
+    background:#05070d;
+  }
+  /* CRT overlay */
+  #crt{
+    position:absolute; inset:0; pointer-events:none; z-index:6;
+    background:
+      repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, rgba(0,0,0,0) 1px 3px),
+      radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%);
+    mix-blend-mode:multiply;
+  }
+  .layer{position:absolute; inset:0; z-index:5; pointer-events:none;}
+
+  /* ── HUD ─────────────────────────────────────────────── */
+  #hud{
+    position:absolute; top:0; left:0; right:0; z-index:4; padding:10px 12px;
+    display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    font-family:var(--px); font-size:9px; line-height:1.7; letter-spacing:.5px;
+    text-shadow:0 2px 0 #000; pointer-events:none;
+  }
+  #zone{color:var(--gold);}
+  #shards{color:var(--cyan); text-align:right;}
+  #hint{
+    position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:4;
+    font-family:var(--px); font-size:8px; color:var(--dim); text-shadow:0 2px 0 #000;
+    pointer-events:none; opacity:.9; text-align:center; padding:0 10px;
+  }
+
+  /* ── DIALOGUE ────────────────────────────────────────── */
+  #dlg{
+    position:absolute; left:50%; bottom:22px; transform:translateX(-50%);
+    width:min(720px, calc(100% - 28px)); z-index:7; display:none;
+    background:linear-gradient(180deg, #0b1020ee, #060912f2);
+    border:2px solid var(--gold); border-radius:4px;
+    box-shadow:0 0 0 2px #000, 0 0 26px #ffb00030, inset 0 0 40px #ffb00008;
+    padding:14px 16px 12px;
+  }
+  #dlg.on{display:block;}
+  #dlgName{
+    position:absolute; top:-11px; left:12px; background:var(--gold); color:#0b0d14;
+    font-family:var(--px); font-size:8px; padding:4px 8px; border-radius:2px;
+    box-shadow:0 0 0 2px #000;
+  }
+  #dlgText{
+    font-family:var(--mono); font-size:14px; line-height:1.65; min-height:78px;
+    white-space:pre-wrap; color:#dbe4f0;
+  }
+  #dlgText b{color:var(--gold);} #dlgText i{color:var(--cyan); font-style:normal;}
+  #dlgFoot{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:8px; font-family:var(--px); font-size:7px; color:var(--dim);
+  }
+  #dlgNext{color:var(--gold); animation:blink 1s steps(2) infinite;}
+  @keyframes blink{50%{opacity:0}}
+
+  /* ── TOAST ───────────────────────────────────────────── */
+  #toast{
+    position:absolute; left:50%; top:34%; transform:translate(-50%,-50%) scale(.9);
+    z-index:8; opacity:0; transition:.25s; pointer-events:none; text-align:center;
+    font-family:var(--px); font-size:12px; color:var(--gold);
+    text-shadow:0 0 18px #ffb00088, 0 3px 0 #000;
+  }
+  #toast.on{opacity:1; transform:translate(-50%,-50%) scale(1);}
+  #toast small{display:block; margin-top:8px; font-size:8px; color:var(--cyan);}
+
+  /* ── SCREENS ─────────────────────────────────────────── */
+  .screen{
+    position:absolute; inset:0; z-index:9; display:none;
+    flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px; gap:16px; overflow-y:auto;
+    background:radial-gradient(ellipse at center, #10152acc 0%, #04060bfa 70%);
+    backdrop-filter:blur(2px);
+  }
+  .screen.on{display:flex;}
+  .title{
+    font-family:var(--px); font-size:clamp(18px,5.2vw,42px); color:var(--gold);
+    text-shadow:0 0 26px #ffb00066, 0 5px 0 #000; letter-spacing:2px;
+  }
+  .sub{font-family:var(--px); font-size:clamp(7px,1.7vw,10px); color:var(--violet); line-height:2;}
+  .body{max-width:620px; font-size:14px; line-height:1.75; color:#c9d4e4;}
+  .press{
+    font-family:var(--px); font-size:clamp(9px,2.2vw,13px); color:var(--cyan);
+    animation:blink 1.05s steps(2) infinite; margin-top:6px;
+  }
+  .keys{
+    display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+    font-family:var(--px); font-size:8px; color:var(--dim);
+  }
+  .keys span{border:1px solid #2a3550; border-radius:3px; padding:6px 8px; background:#0a0f1c;}
+  .links{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:4px;}
+  .links a{
+    font-family:var(--px); font-size:8px; text-decoration:none; color:#0b0d14;
+    background:var(--gold); padding:9px 11px; border-radius:3px;
+    box-shadow:0 0 0 2px #000; transition:.15s;
+  }
+  .links a:hover{transform:translateY(-2px); background:var(--cyan);}
+  .links a.ghost{background:#0a0f1c; color:var(--cyan); box-shadow:0 0 0 2px #1d2740;}
+  .rank{
+    font-family:var(--px); font-size:clamp(14px,4vw,28px); color:var(--green);
+    text-shadow:0 0 22px #4ade8066, 0 4px 0 #000;
+  }
+  .screen .foot{font-family:var(--px); font-size:7px; color:#4b5772; margin-top:8px;}
+
+  /* ── TOUCH CONTROLS ──────────────────────────────────── */
+  #touch{position:absolute; inset:0; z-index:8; display:none; pointer-events:none;}
+  #touch.on{display:block;}
+  .pad{
+    position:absolute; bottom:22px; left:18px; width:150px; height:150px;
+    pointer-events:auto;
+  }
+  .pad b{
+    position:absolute; width:50px; height:50px; background:#0d1424cc;
+    border:2px solid #26314d; border-radius:6px; color:var(--gold);
+    font-family:var(--px); font-size:11px; display:flex; align-items:center; justify-content:center;
+  }
+  .pad b:active{background:var(--gold); color:#0b0d14;}
+  .pad .u{left:50px; top:0;} .pad .d{left:50px; top:100px;}
+  .pad .l{left:0; top:50px;} .pad .r{left:100px; top:50px;}
+  #act{
+    position:absolute; bottom:44px; right:24px; width:82px; height:82px;
+    border-radius:50%; background:#ffb000dd; border:3px solid #000; color:#0b0d14;
+    font-family:var(--px); font-size:11px; display:flex; align-items:center; justify-content:center;
+    pointer-events:auto;
+  }
+  #act:active{background:var(--cyan);}
+
+  /* keep the dialogue clear of the thumb controls on phones */
+  @media (max-width:760px), (hover:none){
+    #dlg{bottom:196px;}
+    #dlgText{font-size:13px; min-height:64px;}
+    #hint{bottom:180px;}
+  }
+  @media (max-width:760px) and (orientation:landscape){
+    #dlg{bottom:14px; width:min(560px, calc(100% - 220px));}
+    #hint{bottom:6px;}
+  }
+</style>
+</head>
+<body>
+<div id="shell">
+  <canvas id="cv"></canvas>
+  <div id="crt"></div>
+
+  <div id="hud">
+    <div id="zone">—</div>
+    <div id="shards">SHARDS 0/4</div>
+  </div>
+  <div id="hint"></div>
+
+  <div id="dlg">
+    <div id="dlgName">TERMINAL</div>
+    <div id="dlgText"></div>
+    <div id="dlgFoot"><span id="dlgPage">1/1</span><span id="dlgNext">[E] NEXT ▾</span></div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- TITLE -->
+  <div class="screen on" id="scTitle">
+    <div class="title">YEASIN.EXE</div>
+    <div class="sub">◆ THE ARCHIVE ◆</div>
+    <div class="body">
+      Somewhere in here is a final-year CSE student who trains models and takes systems apart.
+      Four sealed wings. Four data shards. Walk in and find out who he is.
+    </div>
+    <div class="keys">
+      <span>↑ ↓ ← → / WASD — MOVE</span><span>E / SPACE — TALK</span><span>ESC — CLOSE</span>
+    </div>
+    <div class="press">▶ PRESS ENTER TO START</div>
+    <div class="foot">TIP — READ EVERY TERMINAL IN A WING TO MAKE ITS SHARD APPEAR</div>
+  </div>
+
+  <!-- ENDING -->
+  <div class="screen" id="scEnd">
+    <div class="rank">ARCHIVE COMPLETE</div>
+    <div class="title" style="font-size:clamp(14px,3.6vw,26px)">MD YEASIN ARAFAT</div>
+    <div class="sub">FINAL-YEAR CSE · BANGLADESH · AI + SECURITY</div>
+    <div class="body" id="endBody"></div>
+    <div class="links">
+      <a href="https://github.com/CodeWithYeasin" target="_blank" rel="noopener">GITHUB</a>
+      <a href="https://www.linkedin.com/in/md-yeasin-arafat-b23484343" target="_blank" rel="noopener">LINKEDIN</a>
+      <a href="mailto:codewithyeasin@gmail.com">EMAIL</a>
+      <a class="ghost" href="https://x.com/CodeWithYeasin" target="_blank" rel="noopener">X</a>
+      <a class="ghost" href="https://medium.com/@codewithyeasin" target="_blank" rel="noopener">MEDIUM</a>
+      <a class="ghost" href="https://www.youtube.com/channel/UCW6pRWGsCDE51qBhliPn4Ow" target="_blank" rel="noopener">YOUTUBE</a>
+    </div>
+    <div class="press" id="endAgain">▶ PRESS R TO EXPLORE AGAIN</div>
+    <div class="foot">THANKS FOR PLAYING — STAR A REPO ON THE WAY OUT ⭐</div>
+  </div>
+
+  <!-- TOUCH -->
+  <div id="touch">
+    <div class="pad">
+      <b class="u" data-k="up">▲</b><b class="d" data-k="down">▼</b>
+      <b class="l" data-k="left">◀</b><b class="r" data-k="right">▶</b>
+    </div>
+    <div id="act">E</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ══════════════════════════════════════════════════════════════════════════
+   YEASIN.EXE — THE ARCHIVE
+   A single-file top-down pixel RPG. No assets, no dependencies, no storage.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const TS = 16;                     // tile size in world pixels
+let VW = 384, VH = 216;            // internal render resolution (recomputed in fit())
+const GW = 80, GH = 74;            // world size in tiles
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d', { alpha:false });
+cv.width = VW; cv.height = VH;
+ctx.imageSmoothingEnabled = false;
+
+/* ── ZONES ──────────────────────────────────────────────────────────────── */
+const ZONES = {
+  spire:  { name:'THE BEACON',     rect:[32, 4,16,10], floor:'#141a2e', wall:'#2b3560', accent:'#22d3ee' },
+  arcane: { name:'ARCANE TOWER',   rect:[32,20,16,12], floor:'#181233', wall:'#3a2a70', accent:'#a78bfa' },
+  hub:    { name:'THE TERMINAL',   rect:[32,38,16,12], floor:'#101725', wall:'#26314d', accent:'#ffb000' },
+  forge:  { name:'THE FORGE',      rect:[32,58,16,12], floor:'#0d2320', wall:'#1c4d45', accent:'#2dd4bf' },
+  origin: { name:'ORIGIN WING',    rect:[ 8,38,16,12], floor:'#1d1508', wall:'#4d3a14', accent:'#ffb000' },
+  shadow: { name:'SHADOW KEEP',    rect:[56,38,16,12], floor:'#210f12', wall:'#5c2026', accent:'#f87171' },
+};
+const CORRIDORS = [
+  // [x, y, w, h, zone-for-colour]
+  [39,14, 2, 6,'arcane'],   // spire  <-> arcane   (LOCKED GATE at y=14)
+  [39,32, 2, 6,'hub'],      // arcane <-> hub
+  [39,50, 2, 8,'hub'],      // hub    <-> forge
+  [24,43, 8, 2,'hub'],      // origin <-> hub
+  [48,43, 8, 2,'hub'],      // hub    <-> shadow
+];
+const GATE = { x:39, y:14, w:2, h:2 };   // opens at 4 shards
+
+/* ── WORLD GRID ─────────────────────────────────────────────────────────── */
+// 0 = void, 1 = floor, 2 = wall
+const grid = Array.from({length:GH}, () => new Uint8Array(GW));
+const zoneOf = Array.from({length:GH}, () => new Array(GW).fill(null));
+
+function carve(x, y, w, h, zone){
+  for(let j=y-1; j<y+h+1; j++) for(let i=x-1; i<x+w+1; i++){
+    if(i<0||j<0||i>=GW||j>=GH) continue;
+    const inside = i>=x && i<x+w && j>=y && j<y+h;
+    if(inside){ grid[j][i] = 1; zoneOf[j][i] = zone; }
+    else if(grid[j][i] === 0){ grid[j][i] = 2; zoneOf[j][i] = zoneOf[j][i] || zone; }
+  }
+}
+for(const [key, z] of Object.entries(ZONES)) carve(...z.rect, key);
+for(const [x,y,w,h,z] of CORRIDORS) carve(x,y,w,h,z);
+// corridor mouths punch through room walls
+function open(x,y,w,h,z){ for(let j=y;j<y+h;j++) for(let i=x;i<x+w;i++){ grid[j][i]=1; zoneOf[j][i]=z; } }
+open(39,13, 2, 8,'arcane'); open(39,31, 2, 8,'hub');
+open(39,49, 2,10,'hub');    open(23,43,10, 2,'hub'); open(47,43,10,2,'hub');
+
+/* ── PROPS & DECOR ──────────────────────────────────────────────────────── */
+const props = [];            // {x,y,type,zone}
+const propBlock = new Set(); // "x,y" of tiles props occupy
+const carpet = new Set();    // "x,y" of decorative floor
+const key = (x,y) => x + ',' + y;
+
+function furnish(zoneKey){
+  const z = ZONES[zoneKey];
+  const [x, y, w, h] = z.rect;
+  // corner pillars
+  for(const [px, py] of [[x, y], [x+w-1, y], [x, y+h-1], [x+w-1, y+h-1]]){
+    props.push({ x:px, y:py, type:'pillar', zone:zoneKey });
+    propBlock.add(key(px, py));
+  }
+  // wall lamps along the top wall
+  for(let i = x+3; i < x+w-2; i += 5) props.push({ x:i, y:y-1, type:'lamp', zone:zoneKey });
+  // centre carpet
+  const cx0 = x + Math.floor(w/2) - 2, cy0 = y + Math.floor(h/2) - 1;
+  for(let j = cy0; j < cy0+3; j++) for(let i = cx0; i < cx0+5; i++) carpet.add(key(i, j));
+  // scattered crates, deterministic so the map never shuffles
+  let seed = zoneKey.length * 977 + x * 31 + y * 17;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  for(let n = 0; n < 5; n++){
+    const px = x + 1 + Math.floor(rnd() * (w-2));
+    const py = y + 1 + Math.floor(rnd() * (h-2));
+    if(carpet.has(key(px,py)) || propBlock.has(key(px,py))) continue;
+    if(ENTITIES.some(e => Math.abs(e.x-px) < 2 && Math.abs(e.y-py) < 2)) continue;
+    if(Object.values(SHARD_SPOTS).some(s => Math.abs(s.x-px) < 2 && Math.abs(s.y-py) < 2)) continue;
+    if(Math.abs(px-40) < 2 && Math.abs(py-44) < 2) continue;              // keep the spawn clear
+    if(px === 39 || px === 40) continue;                                  // keep corridors clear
+    if(py === 43 || py === 44) continue;
+    props.push({ x:px, y:py, type: rnd() > .55 ? 'plant' : 'crate', zone:zoneKey });
+    propBlock.add(key(px, py));
+  }
+}
+
+/* ── CONTENT ────────────────────────────────────────────────────────────────
+   ✏️  EDIT ME. Every `pages` array below is what a visitor actually reads.
+   Keep it in your own voice — that is the whole point of the game.
+   ──────────────────────────────────────────────────────────────────────── */
+const ENTITIES = [
+  /* ── HUB ─────────────────────────────────────────────────────────────── */
+  { x:40, y:41, zone:'hub', kind:'sign', name:'NOTICE BOARD', pages:[
+    "<b>WELCOME TO THE ARCHIVE.</b>\n\nFour wings branch off this room. Each one holds a piece of who I am.\n\nRead every terminal in a wing and its <i>DATA SHARD</i> appears. Collect all four and the north gate opens."
+  ]},
+  { x:36, y:45, zone:'hub', kind:'npc', name:'ARCHIVIST', pages:[
+    "You must be the visitor.\n\nHe's not here — he's usually three tabs deep in a paper he only half understands yet. He said to let you look around.",
+    "The short version, since you asked:\n\n<b>Md Yeasin Arafat.</b> Final-year Computer Science undergrad, based in Bangladesh. Trains models. Takes systems apart to see what holds.",
+    "He thinks those two are the same job.\n\n<i>\"A model is just another attack surface.\"</i>\n\nHe says that a lot. Go west to start at the beginning."
+  ]},
+  { x:44, y:45, zone:'hub', kind:'term', name:'STATUS CONSOLE', pages:[
+    "<b>CURRENT STATE</b>\n\n▸ Wrapping up a final-year thesis\n▸ Reading more source code than documentation\n▸ Open to research collabs, internships, open source",
+    "<b>NOT CURRENTLY</b>\n\n▸ Sleeping a normal amount\n▸ Convinced by any metric that looks too clean"
+  ]},
+
+  /* ── ORIGIN WING ─────────────────────────────────────────────────────── */
+  { x:12, y:41, zone:'origin', kind:'term', name:'MEMORY 01 — THE LAPTOP', shardStep:true, pages:[
+    "The first <b>Hello, World</b> ran on a secondhand laptop that shut itself off whenever the fan got tired.\n\nWhich was often.",
+    "So the loop became: write something, lose it, write it again from memory.\n\nTurns out that's a decent way to learn. Not a decent way to keep a laptop."
+  ]},
+  { x:20, y:41, zone:'origin', kind:'term', name:'MEMORY 02 — THE DEGREE', shardStep:true, pages:[
+    "<b>Computer Science &amp; Engineering.</b> Final year.\n\nData structures, networks, operating systems, the usual campaign. The parts that stuck were the ones where something broke and nobody had written down why.",
+    "Somewhere around year three the questions got better:\n\n<i>Can a model learn to notice the thing I missed?</i>\n<i>Will the system still stand when someone is actively trying to knock it over?</i>"
+  ]},
+  { x:16, y:47, zone:'origin', kind:'npc', name:'THE FIRST BUG', shardStep:true, pages:[
+    "I'm the one that took eleven hours.\n\nHe was certain — <i>certain</i> — the problem was in the library.",
+    "It was his own off-by-one. Line four.\n\nHe still checks his own code first now. You could call that a lesson. He calls it a scar."
+  ]},
+
+  /* ── ARCANE TOWER (AI / ML) ──────────────────────────────────────────── */
+  { x:36, y:23, zone:'arcane', kind:'term', name:'GRIMOIRE — DEEP LEARNING', shardStep:true, pages:[
+    "<b>PyTorch · TensorFlow · Keras · scikit-learn</b>\n\nThe first model that converged did it at 3AM after nine failed runs. Nothing since has felt quite like that.",
+    "What he actually enjoys: the part where the loss curve stops lying to you and the validation set agrees for once."
+  ]},
+  { x:44, y:23, zone:'arcane', kind:'term', name:'GRIMOIRE — VISION + LANGUAGE', shardStep:true, pages:[
+    "<b>Computer vision</b> — OpenCV, CNNs, the long tail of images that look nothing like the training set.\n\n<b>NLP</b> — transformers, attention, and the humbling discovery that tokenisation is where most bugs live.",
+    "Currently grinding: <i>adversarial robustness</i>. Making a model wrong on purpose teaches you more about it than making it right."
+  ]},
+  { x:40, y:28, zone:'arcane', kind:'npc', name:'THE OVERFIT MODEL', shardStep:true, pages:[
+    "99.1% accuracy. Look at me. Beautiful.\n\n...on the training set.",
+    "He shipped me once. Exactly once.\n\nNow he splits the data before he gets excited. <i>\"A model with 99% accuracy on a broken dataset is 100% wrong.\"</i> He wrote that on a sticky note. It's still there."
+  ]},
+
+  /* ── SHADOW KEEP (security) ──────────────────────────────────────────── */
+  { x:60, y:41, zone:'shadow', kind:'term', name:'DOSSIER — RECON', shardStep:true, pages:[
+    "<b>Kali · Nmap · Wireshark · Burp Suite · Metasploit</b>\n\nIn a lab he owns, on machines he's allowed to touch. That distinction matters and he'll say so if you ask.",
+    "The favourite part isn't the exploit. It's the moment the traffic capture contradicts the documentation."
+  ]},
+  { x:68, y:41, zone:'shadow', kind:'term', name:'DOSSIER — THREAT MODELING', shardStep:true, pages:[
+    "Before asking <i>how do I break this</i>, ask <i>who would want to, and what do they get</i>.\n\nMost security work is that question, asked earlier than is comfortable.",
+    "<i>\"It works on my machine\" is a threat model, not a defense.</i>"
+  ]},
+  { x:64, y:47, zone:'shadow', kind:'npc', name:'CTF NIGHT', shardStep:true, pages:[
+    "Two in the morning, one flag left, everyone else asleep.\n\nHe doesn't win most of them. He finishes most of them, which is a different and slower kind of stubborn.",
+    "The overlap he keeps chasing: poisoned training data, adversarial inputs, models that fail quietly.\n\nSecure AI systems. That's the endgame he's aiming at."
+  ]},
+
+  /* ── THE FORGE (projects) ────────────────────────────────────────────── */
+  { x:36, y:61, zone:'forge', kind:'term', name:'FORGE — PROJECT I', shardStep:true, pages:[
+    "<b>✏️ PROJECT ONE</b>\n\nReplace this with a real repo. Two sentences: what problem it solves, and what was hard about it.\n\n<i>Stack: Python · PyTorch</i>"
+  ]},
+  { x:44, y:61, zone:'forge', kind:'term', name:'FORGE — PROJECT II', shardStep:true, pages:[
+    "<b>✏️ PROJECT TWO</b>\n\nReplace this with a real repo. The hard part is the interesting part — lead with that.\n\n<i>Stack: Node · Docker</i>"
+  ]},
+  { x:40, y:66, zone:'forge', kind:'term', name:'FORGE — THE ANVIL', shardStep:true, pages:[
+    "<b>What he builds with</b>\n\nPython · C · C++ · Java · Kotlin · TypeScript\nReact · Next.js · Node · Django · Flask\nPostgreSQL · MongoDB · Redis · Docker · Linux",
+    "Full-stack apps that real people filed real bug reports against. That's the credential he'd actually defend."
+  ]},
+
+  /* ── THE BEACON (ending) ─────────────────────────────────────────────── */
+  { x:40, y:8, zone:'spire', kind:'beacon', name:'THE BEACON', pages:[
+    "Four shards. You read the whole archive.\n\nMost people scroll past a profile in eleven seconds. You didn't.",
+    "<b>TRANSMITTING...</b>"
+  ]},
+];
+
+/* shards spawn once every terminal in the wing has been read */
+const SHARD_SPOTS = {
+  origin:{x:16, y:43}, arcane:{x:40, y:25}, shadow:{x:64, y:43}, forge:{x:40, y:63},
+};
+
+for(const zk of Object.keys(ZONES)) furnish(zk);
+
+/* ── STATE ──────────────────────────────────────────────────────────────── */
+const S = {
+  mode:'title',                 // title | play | dialogue | end
+  player:{ x:40*TS+8, y:44*TS+8, dir:'down', frame:0, moving:false, anim:0 },
+  cam:{x:0, y:0},
+  keys:{}, touch:{},
+  read:new Set(),               // entity names already read
+  shards:new Set(),             // zone keys collected
+  shardEnts:[],                 // live shard pickups
+  dlg:null, page:0, typed:0, typeT:0,
+  near:null, t:0, gateOpen:false, actLatch:false,
+};
+
+/* ── INPUT ──────────────────────────────────────────────────────────────── */
+const KEYMAP = {
+  ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right',
+  w:'up', s:'down', a:'left', d:'right', W:'up', S:'down', A:'left', D:'right',
+};
+addEventListener('keydown', e => {
+  const k = KEYMAP[e.key];
+  if(k){ S.keys[k] = true; e.preventDefault(); }
+  if(e.key === 'Enter' && S.mode === 'title'){ startGame(); e.preventDefault(); }
+  if((e.key === 'e' || e.key === 'E' || e.key === ' ')){
+    e.preventDefault();
+    if(S.mode === 'play') interact();
+    else if(S.mode === 'dialogue') advance();
+  }
+  if(e.key === 'Escape' && S.mode === 'dialogue') closeDlg();
+  if((e.key === 'r' || e.key === 'R') && S.mode === 'end') location.reload();
+});
+addEventListener('keyup', e => { const k = KEYMAP[e.key]; if(k) S.keys[k] = false; });
+
+// touch
+const isTouch = matchMedia('(hover: none)').matches || 'ontouchstart' in window;
+if(isTouch) document.getElementById('touch').classList.add('on');
+document.querySelectorAll('.pad b').forEach(b => {
+  const k = b.dataset.k;
+  const on = e => { e.preventDefault(); S.touch[k] = true; };
+  const off = e => { e.preventDefault(); S.touch[k] = false; };
+  b.addEventListener('touchstart', on, {passive:false});
+  b.addEventListener('touchend', off);   b.addEventListener('touchcancel', off);
+  b.addEventListener('mousedown', on);   b.addEventListener('mouseup', off);
+  b.addEventListener('mouseleave', off);
+});
+const actBtn = document.getElementById('act');
+const doAct = e => {
+  e.preventDefault();
+  if(S.mode === 'title') startGame();
+  else if(S.mode === 'play') interact();
+  else if(S.mode === 'dialogue') advance();
+};
+actBtn.addEventListener('touchstart', doAct, {passive:false});
+actBtn.addEventListener('click', doAct);
+document.getElementById('scTitle').addEventListener('click', () => { if(S.mode==='title') startGame(); });
+
+function held(k){ return !!(S.keys[k] || S.touch[k]); }
+
+/* ── COLLISION ──────────────────────────────────────────────────────────── */
+const solid = (tx, ty) => {
+  if(tx < 0 || ty < 0 || tx >= GW || ty >= GH) return true;
+  if(grid[ty][tx] !== 1) return true;
+  if(!S.gateOpen && tx >= GATE.x && tx < GATE.x+GATE.w && ty >= GATE.y && ty < GATE.y+GATE.h) return true;
+  if(propBlock.has(key(tx, ty))) return true;
+  return false;
+};
+const HB = 5;   // half-box of the player in pixels
+function canMove(px, py){
+  for(const [ox, oy] of [[-HB,-2],[HB,-2],[-HB,HB],[HB,HB]]){
+    if(solid(Math.floor((px+ox)/TS), Math.floor((py+oy)/TS))) return false;
+  }
+  return true;
+}
+
+/* ── GAME FLOW ──────────────────────────────────────────────────────────── */
+function startGame(){
+  S.mode = 'play';
+  document.getElementById('scTitle').classList.remove('on');
+  toast('THE ARCHIVE', 'four wings · four shards');
+}
+
+function entitiesNow(){ return ENTITIES.concat(S.shardEnts); }
+
+function interact(){
+  const e = S.near;
+  if(!e) return;
+  if(e.kind === 'shard'){ pickShard(e); return; }
+  if(e.kind === 'beacon' && S.shards.size < 4) return;
+  openDlg(e);
+}
+
+function openDlg(e){
+  S.mode = 'dialogue'; S.dlg = e; S.page = 0; S.typed = 0; S.typeT = 0;
+  document.getElementById('dlg').classList.add('on');
+  document.getElementById('dlgName').textContent = e.name;
+  renderDlg();
+}
+function advance(){
+  const e = S.dlg; if(!e) return;
+  const full = e.pages[S.page];
+  if(S.typed < full.length){ S.typed = full.length; renderDlg(); return; }   // skip typing
+  if(S.page < e.pages.length - 1){ S.page++; S.typed = 0; renderDlg(); return; }
+  closeDlg();
+  if(e.kind === 'beacon'){ endGame(); return; }
+  if(e.shardStep && !S.read.has(e.name)){ S.read.add(e.name); checkZone(e.zone); }
+}
+function closeDlg(){
+  S.mode = 'play'; S.dlg = null;
+  document.getElementById('dlg').classList.remove('on');
+}
+function renderDlg(){
+  const e = S.dlg;
+  document.getElementById('dlgText').innerHTML = e.pages[S.page].slice(0, S.typed);
+  document.getElementById('dlgPage').textContent = `${S.page+1}/${e.pages.length}`;
+  const done = S.typed >= e.pages[S.page].length;
+  const last = S.page === e.pages.length - 1;
+  document.getElementById('dlgNext').textContent =
+    !done ? '[E] SKIP' : (last ? '[E] CLOSE ✕' : '[E] NEXT ▾');
+}
+
+function checkZone(zone){
+  if(S.shards.has(zone) || S.shardEnts.some(s => s.zone === zone)) return;
+  const all = ENTITIES.filter(x => x.zone === zone && x.shardStep);
+  if(!all.every(x => S.read.has(x.name))) return;
+  const p = SHARD_SPOTS[zone]; if(!p) return;
+  S.shardEnts.push({ x:p.x, y:p.y, zone, kind:'shard', name:'DATA SHARD', pages:[] });
+  toast('A SHARD MATERIALISES', ZONES[zone].name + ' — go pick it up');
+}
+
+function pickShard(e){
+  S.shards.add(e.zone);
+  S.shardEnts = S.shardEnts.filter(s => s !== e);
+  updateHUD();
+  if(S.shards.size >= 4){
+    S.gateOpen = true;
+    toast('THE NORTH GATE OPENS', 'the beacon is waiting');
+  } else {
+    toast(`SHARD ${S.shards.size}/4 ACQUIRED`, ZONES[e.zone].name + ' cleared');
+  }
+}
+
+function endGame(){
+  S.mode = 'end';
+  document.getElementById('endBody').innerHTML =
+    "He's finishing a CSE degree in Bangladesh and pointing everything he has at one problem: " +
+    "<b>systems that stay standing when the model itself is the thing under attack.</b><br><br>" +
+    "Looking for research collabs, internships, and open source work at that intersection. " +
+    "If that's your corner of the world too, the door's open.";
+  document.getElementById('scEnd').classList.add('on');
+}
+
+let toastT = 0;
+function toast(main, sub){
+  const el = document.getElementById('toast');
+  el.innerHTML = main + (sub ? `<small>${sub}</small>` : '');
+  el.classList.add('on'); toastT = 2.6;
+}
+
+function updateHUD(){
+  document.getElementById('shards').textContent =
+    'SHARDS ' + S.shards.size + '/4 ' + '◆'.repeat(S.shards.size) + '◇'.repeat(4 - S.shards.size);
+}
+updateHUD();
+
+/* ── UPDATE ─────────────────────────────────────────────────────────────── */
+function update(dt){
+  if(toastT > 0){ toastT -= dt; if(toastT <= 0) document.getElementById('toast').classList.remove('on'); }
+
+  if(S.mode === 'dialogue' && S.dlg){
+    const full = S.dlg.pages[S.page];
+    if(S.typed < full.length){
+      S.typeT += dt;
+      while(S.typeT > 0.012 && S.typed < full.length){ S.typeT -= 0.012; S.typed++; }
+      // don't stop mid-HTML-tag
+      const s = full.slice(0, S.typed);
+      const lt = s.lastIndexOf('<'), gt = s.lastIndexOf('>');
+      if(lt > gt){ S.typed = full.indexOf('>', lt) + 1; }
+      renderDlg();
+    }
+  }
+
+  if(S.mode === 'play'){
+    const p = S.player, sp = 74 * dt;
+    let dx = 0, dy = 0;
+    if(held('left')) dx -= 1; if(held('right')) dx += 1;
+    if(held('up'))   dy -= 1; if(held('down'))  dy += 1;
+    if(dx && dy){ dx *= 0.707; dy *= 0.707; }
+    if(dx || dy){
+      p.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
+      p.moving = true; p.anim += dt * 9;
+      if(canMove(p.x + dx*sp, p.y)) p.x += dx*sp;
+      if(canMove(p.x, p.y + dy*sp)) p.y += dy*sp;
+    } else { p.moving = false; p.anim = 0; }
+
+    // nearest interactable
+    S.near = null; let best = 999;
+    for(const e of entitiesNow()){
+      const d = Math.hypot(e.x*TS + 8 - p.x, e.y*TS + 8 - p.y);
+      if(d < 22 && d < best){ best = d; S.near = e; }
+    }
+    // auto-pickup when you walk onto a shard
+    if(S.near && S.near.kind === 'shard' && best < 12) pickShard(S.near);
+
+    const tz = zoneOf[Math.floor(p.y/TS)]?.[Math.floor(p.x/TS)];
+    document.getElementById('zone').textContent = tz ? ZONES[tz].name : 'THE CORRIDOR';
+    if(tz && tz !== S.lastZone){
+      const first = S.lastZone !== undefined;
+      S.lastZone = tz;
+      if(first && !S.shards.has(tz)){
+        const left = ENTITIES.filter(e => e.zone === tz && e.shardStep && !S.read.has(e.name)).length;
+        if(left) toast(ZONES[tz].name, left + ' terminal' + (left>1?'s':'') + ' left in this wing');
+      }
+    }
+
+    let hint = '';
+    if(S.near){
+      hint = S.near.kind === 'shard' ? '◆ ' + S.near.name + ' — WALK INTO IT'
+           : (S.near.kind === 'beacon' && S.shards.size < 4)
+             ? '🔒 ' + S.near.name + ' — NEEDS 4 SHARDS'
+             : '[E] ' + S.near.name;
+    } else if(!S.shards.size){ hint = 'MOVE WITH ARROWS / WASD · READ TERMINALS WITH [E]'; }
+    document.getElementById('hint').textContent = hint;
+  }
+
+  // camera
+  const tx = S.player.x - VW/2, ty = S.player.y - VH/2;
+  S.cam.x += (tx - S.cam.x) * Math.min(1, dt*7);
+  S.cam.y += (ty - S.cam.y) * Math.min(1, dt*7);
+  S.cam.x = Math.max(0, Math.min(GW*TS - VW, S.cam.x));
+  S.cam.y = Math.max(0, Math.min(GH*TS - VH, S.cam.y));
+  S.t += dt;
+}
+
+/* ── RENDER ─────────────────────────────────────────────────────────────── */
+function shade(hex, f){
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, Math.max(0, ((n>>16)&255) * f)) | 0;
+  const g = Math.min(255, Math.max(0, ((n>>8)&255)  * f)) | 0;
+  const b = Math.min(255, Math.max(0, (n&255)       * f)) | 0;
+  return `rgb(${r},${g},${b})`;
+}
+
+function draw(){
+  ctx.fillStyle = '#05070d'; ctx.fillRect(0,0,VW,VH);
+  const cx = Math.floor(S.cam.x), cy = Math.floor(S.cam.y);
+  const x0 = Math.floor(cx/TS), y0 = Math.floor(cy/TS);
+
+  for(let j = y0-1; j <= y0 + VH/TS + 1; j++){
+    for(let i = x0-1; i <= x0 + VW/TS + 1; i++){
+      if(i<0||j<0||i>=GW||j>=GH) continue;
+      const t = grid[j][i]; if(!t) continue;
+      const z = ZONES[zoneOf[j][i]] || ZONES.hub;
+      const sx = i*TS - cx, sy = j*TS - cy;
+
+      if(t === 1){
+        ctx.fillStyle = ((i+j) & 1) ? shade(z.floor, 1.25) : shade(z.floor, 1.55);
+        ctx.fillRect(sx, sy, TS, TS);
+        // grout lines make the tiles read as tiles
+        ctx.fillStyle = shade(z.floor, .82);
+        ctx.fillRect(sx, sy+TS-1, TS, 1); ctx.fillRect(sx+TS-1, sy, 1, TS);
+        if(((i*7 + j*13) % 11) === 0){
+          ctx.fillStyle = shade(z.floor, 2.3); ctx.fillRect(sx+5, sy+6, 2, 2);
+        }
+        if(carpet.has(key(i,j))){
+          ctx.fillStyle = z.accent + '22'; ctx.fillRect(sx, sy, TS, TS);
+          ctx.fillStyle = z.accent + '55';
+          if(!carpet.has(key(i,j-1))) ctx.fillRect(sx, sy, TS, 1);
+          if(!carpet.has(key(i,j+1))) ctx.fillRect(sx, sy+TS-1, TS, 1);
+          if(!carpet.has(key(i-1,j))) ctx.fillRect(sx, sy, 1, TS);
+          if(!carpet.has(key(i+1,j))) ctx.fillRect(sx+TS-1, sy, 1, TS);
+        }
+      } else {
+        ctx.fillStyle = z.wall; ctx.fillRect(sx, sy, TS, TS);
+        ctx.fillStyle = shade(z.wall, 1.6); ctx.fillRect(sx, sy, TS, 4);
+        ctx.fillStyle = shade(z.wall, 1.9); ctx.fillRect(sx, sy, TS, 1);
+        ctx.fillStyle = shade(z.wall, .45); ctx.fillRect(sx, sy+TS-3, TS, 3);
+        ctx.fillStyle = shade(z.wall, .8);  ctx.fillRect(sx+TS-1, sy+4, 1, TS-7);
+      }
+    }
+  }
+
+  // props
+  for(const p of props){
+    const sx = p.x*TS - cx, sy = p.y*TS - cy;
+    if(sx < -TS*2 || sx > VW+TS || sy < -TS*2 || sy > VH+TS) continue;
+    const z = ZONES[p.zone];
+    if(p.type === 'pillar'){
+      ctx.fillStyle = shade(z.wall, .55); ctx.fillRect(sx+1, sy+2, 14, 14);
+      ctx.fillStyle = shade(z.wall, 1.5); ctx.fillRect(sx+2, sy, 12, 4);
+      ctx.fillStyle = shade(z.wall, 1.15); ctx.fillRect(sx+3, sy+4, 10, 11);
+      ctx.fillStyle = shade(z.wall, .8);  ctx.fillRect(sx+6, sy+4, 1, 11);
+    } else if(p.type === 'crate'){
+      ctx.fillStyle = '#00000055'; ctx.fillRect(sx+2, sy+13, 12, 3);
+      ctx.fillStyle = '#3a2c18'; ctx.fillRect(sx+2, sy+4, 12, 10);
+      ctx.fillStyle = '#5b4526'; ctx.fillRect(sx+3, sy+5, 10, 8);
+      ctx.fillStyle = '#2a1f11'; ctx.fillRect(sx+3, sy+8, 10, 1); ctx.fillRect(sx+7, sy+5, 1, 8);
+    } else if(p.type === 'plant'){
+      ctx.fillStyle = '#00000055'; ctx.fillRect(sx+4, sy+14, 8, 2);
+      ctx.fillStyle = '#2b2118'; ctx.fillRect(sx+5, sy+10, 6, 5);
+      ctx.fillStyle = '#2f7a4a'; ctx.fillRect(sx+4, sy+4, 8, 6);
+      ctx.fillStyle = '#48b06a'; ctx.fillRect(sx+6, sy+2, 4, 5);
+      ctx.fillStyle = '#1e5c37'; ctx.fillRect(sx+4, sy+8, 3, 2);
+    } else if(p.type === 'lamp'){
+      const fl = 0.85 + Math.sin(S.t*7 + p.x) * 0.15;
+      ctx.fillStyle = shade(z.wall, .6); ctx.fillRect(sx+6, sy+8, 4, 6);
+      ctx.fillStyle = z.accent; ctx.globalAlpha = fl;
+      ctx.fillRect(sx+5, sy+4, 6, 5); ctx.globalAlpha = 1;
+    }
+  }
+
+  // warm light pools from lamps + the player, drawn additively
+  ctx.globalCompositeOperation = 'lighter';
+  for(const p of props){
+    if(p.type !== 'lamp') continue;
+    const sx = p.x*TS - cx + 8, sy = p.y*TS - cy + 10;
+    if(sx < -70 || sx > VW+70 || sy < -70 || sy > VH+70) continue;
+    const r = 54 + Math.sin(S.t*6 + p.x) * 3;
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+    g.addColorStop(0, (ZONES[p.zone].accent) + '30');
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g; ctx.fillRect(sx-r, sy-r, r*2, r*2);
+  }
+  {
+    const sx = S.player.x - cx, sy = S.player.y - cy, r = 62;
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+    g.addColorStop(0, 'rgba(255,214,140,0.10)');
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g; ctx.fillRect(sx-r, sy-r, r*2, r*2);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+
+  // locked gate
+  if(!S.gateOpen){
+    const sx = GATE.x*TS - cx, sy = GATE.y*TS - cy;
+    if(sx > -40 && sx < VW+40 && sy > -40 && sy < VH+40){
+      ctx.fillStyle = '#3a2a70'; ctx.fillRect(sx, sy, GATE.w*TS, GATE.h*TS);
+      ctx.fillStyle = '#a78bfa';
+      for(let k=0;k<GATE.w*TS;k+=6) ctx.fillRect(sx+k, sy+6, 3, GATE.h*TS-12);
+      ctx.fillStyle = '#ffb000';
+      ctx.fillRect(sx + GATE.w*TS/2 - 3, sy + GATE.h*TS/2 - 4, 6, 8);
+    }
+  }
+
+  // entities
+  for(const e of entitiesNow()){
+    const sx = e.x*TS - cx, sy = e.y*TS - cy;
+    if(sx < -TS*2 || sx > VW+TS*2 || sy < -TS*2 || sy > VH+TS*2) continue;
+    const z = ZONES[e.zone] || ZONES.hub;
+    const bob = Math.sin(S.t*2.4 + e.x) * 1.2;
+
+    if(e.kind === 'shard'){
+      const f = Math.sin(S.t*5) * 2;
+      ctx.fillStyle = '#22d3ee55'; ctx.beginPath();
+      ctx.arc(sx+8, sy+8+f, 9, 0, 7); ctx.fill();
+      ctx.fillStyle = '#22d3ee';
+      ctx.beginPath();
+      ctx.moveTo(sx+8, sy+1+f); ctx.lineTo(sx+13, sy+8+f);
+      ctx.lineTo(sx+8, sy+15+f); ctx.lineTo(sx+3, sy+8+f); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#e8fdff'; ctx.fillRect(sx+7, sy+5+f, 2, 5);
+      continue;
+    }
+    if(e.kind === 'beacon'){
+      const lit = S.shards.size >= 4;
+      const col = lit ? '#22d3ee' : '#3b4463';
+      if(lit){
+        ctx.fillStyle = '#22d3ee22';
+        ctx.beginPath(); ctx.arc(sx+8, sy+8, 18 + Math.sin(S.t*3)*3, 0, 7); ctx.fill();
+      }
+      ctx.fillStyle = '#141a2e'; ctx.fillRect(sx+2, sy+2, 12, 14);
+      ctx.fillStyle = col; ctx.fillRect(sx+4, sy+0, 8, 6);
+      ctx.fillRect(sx+3, sy+8, 10, 2); ctx.fillRect(sx+3, sy+12, 10, 2);
+      continue;
+    }
+    const readIt = S.read.has(e.name);
+    if(e.kind === 'npc'){
+      ctx.fillStyle = '#00000055'; ctx.fillRect(sx+3, sy+14, 10, 3);
+      ctx.fillStyle = z.accent;        ctx.fillRect(sx+4, sy+2+bob, 8, 7);
+      ctx.fillStyle = '#05070d';       ctx.fillRect(sx+6, sy+4+bob, 2, 2); ctx.fillRect(sx+9, sy+4+bob, 2, 2);
+      ctx.fillStyle = shade(z.accent, .55); ctx.fillRect(sx+4, sy+9+bob, 8, 6);
+    } else {
+      ctx.fillStyle = '#00000055'; ctx.fillRect(sx+2, sy+14, 12, 3);
+      ctx.fillStyle = '#0a0f1c'; ctx.fillRect(sx+2, sy+2, 12, 11);
+      ctx.fillStyle = readIt ? shade(z.accent, .45) : z.accent;
+      ctx.fillRect(sx+3, sy+3, 10, 8);
+      ctx.fillStyle = '#05070d';
+      for(let r=0;r<3;r++) ctx.fillRect(sx+4, sy+4+r*3, 8 - (r===1?3:0), 1);
+      ctx.fillStyle = '#0a0f1c'; ctx.fillRect(sx+6, sy+13, 4, 2);
+    }
+    if(!readIt && e.kind !== 'sign'){
+      ctx.fillStyle = '#ffb000';
+      ctx.fillRect(sx+7, sy - 7 + bob, 2, 4); ctx.fillRect(sx+7, sy - 2 + bob, 2, 2);
+    }
+  }
+
+  // player
+  drawPlayer(Math.round(S.player.x - cx), Math.round(S.player.y - cy));
+
+  // interaction ring
+  if(S.near && S.mode === 'play'){
+    const sx = S.near.x*TS - cx + 8, sy = S.near.y*TS - cy + 8;
+    ctx.strokeStyle = '#ffb00088'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(sx, sy, 12 + Math.sin(S.t*6), 0, 7); ctx.stroke();
+  }
+
+  // vignette-ish darkness at the edges of the lit room
+  ctx.fillStyle = 'rgba(3,5,10,0.30)';
+  ctx.fillRect(0,0,VW,10); ctx.fillRect(0,VH-10,VW,10);
+  ctx.fillRect(0,0,10,VH); ctx.fillRect(VW-10,0,10,VH);
+
+  drawMinimap();
+}
+
+function drawPlayer(x, y){
+  const p = S.player;
+  const step = p.moving ? Math.floor(p.anim) % 4 : 0;
+  const lift = (step === 1 || step === 3) ? 1 : 0;
+  ctx.fillStyle = '#00000055'; ctx.fillRect(x-5, y+6, 10, 3);
+  // legs
+  ctx.fillStyle = '#1e2b45';
+  ctx.fillRect(x-4, y+2 - lift, 3, 5); ctx.fillRect(x+1, y+2 + lift, 3, 5);
+  // body
+  ctx.fillStyle = '#ffb000'; ctx.fillRect(x-5, y-5, 10, 8);
+  ctx.fillStyle = '#c98a00'; ctx.fillRect(x-5, y-1, 10, 2);
+  // head
+  ctx.fillStyle = '#f0c8a0'; ctx.fillRect(x-4, y-12, 8, 7);
+  ctx.fillStyle = '#231a12'; ctx.fillRect(x-4, y-13, 8, 3);
+  // face by direction
+  ctx.fillStyle = '#101820';
+  if(p.dir === 'down'){ ctx.fillRect(x-2, y-9, 1, 2); ctx.fillRect(x+1, y-9, 1, 2); }
+  else if(p.dir === 'left'){ ctx.fillRect(x-3, y-9, 1, 2); }
+  else if(p.dir === 'right'){ ctx.fillRect(x+2, y-9, 1, 2); }
+  else { ctx.fillStyle = '#231a12'; ctx.fillRect(x-4, y-12, 8, 5); }
+}
+
+function drawMinimap(){
+  const W = Math.round(Math.min(62, VW * 0.22)), H = Math.round(W * 0.94);
+  const ox = VW - W - 6, oy = 22;
+  ctx.fillStyle = 'rgba(5,8,15,0.78)'; ctx.fillRect(ox-2, oy-2, W+4, H+4);
+  ctx.strokeStyle = '#26314d'; ctx.lineWidth = 1; ctx.strokeRect(ox-2.5, oy-2.5, W+5, H+5);
+  const sx = W/GW, sy = H/GH;
+  for(const [key, z] of Object.entries(ZONES)){
+    const [rx, ry, rw, rh] = z.rect;
+    const got = S.shards.has(key);
+    ctx.fillStyle = got ? z.accent : shade(z.wall, 1.1);
+    ctx.fillRect(ox + rx*sx, oy + ry*sy, rw*sx, rh*sy);
+  }
+  for(const [x,y,w,h] of CORRIDORS){
+    ctx.fillStyle = '#1b2338'; ctx.fillRect(ox + x*sx, oy + y*sy, w*sx, h*sy);
+  }
+  const px = ox + (S.player.x/TS)*sx, py = oy + (S.player.y/TS)*sy;
+  ctx.fillStyle = (Math.floor(S.t*3) % 2) ? '#ffffff' : '#ffb000';
+  ctx.fillRect(px-1.5, py-1.5, 3, 3);
+}
+
+/* ── FIT + LOOP ─────────────────────────────────────────────────────────── */
+/* The canvas fills the window at every aspect ratio: pick an integer pixel
+   scale, then size the internal buffer to whatever that leaves. Portrait
+   phones get a tall narrow view instead of a letterboxed strip. */
+function fit(){
+  const w = innerWidth, h = innerHeight;
+  let scale = Math.floor(Math.min(w/320, h/200));
+  scale = Math.max(2, Math.min(5, scale || 2));
+  VW = Math.max(200, Math.min(560, Math.round(w/scale)));
+  VH = Math.max(150, Math.min(420, Math.round(h/scale)));
+  cv.width = VW; cv.height = VH;
+  ctx.imageSmoothingEnabled = false;
+  cv.style.width  = Math.round(VW*scale) + 'px';
+  cv.style.height = Math.round(VH*scale) + 'px';
+  cv.style.left = Math.round((w - VW*scale)/2) + 'px';
+  cv.style.top  = Math.round((h - VH*scale)/2) + 'px';
+  cv.style.right = 'auto'; cv.style.bottom = 'auto';
+}
+addEventListener('resize', fit); fit();
+
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now - last)/1000); last = now;
+  update(dt); draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// expose a tiny hook so automated checks can drive the game
+window.__game = S;
+</script>
+</body>
+</html>

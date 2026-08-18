@@ -4,6 +4,9 @@ Everything here goes in the repo **`CodeWithYeasin/CodeWithYeasin`** (public, na
 must match your username exactly). Files:
 
 ```
+game/index.html                     ← THE GAME. one file, no dependencies
+game/preview.gif                    ← the animated preview shown in the README
+game/test.mjs                       ← Playwright playthrough test (optional)
 README-game.md                      ← the profile itself
 scripts/update_stats.py             ← XP engine (real GitHub stats → RPG numbers)
 scripts/adventure.py                ← the playable game engine
@@ -46,6 +49,40 @@ git push
 
 The XP engine looks for markers in **both** `README.md` and `README-game.md`, so it
 keeps working whichever name you land on.
+
+## 1.5 · Put the game online (this is the important one)
+
+The game is one self-contained HTML file. To get a real URL:
+
+Repo → **Settings → Pages** → *Source: Deploy from a branch* → branch `main`, folder `/ (root)` → **Save**.
+
+Give it a minute, then it's live at:
+
+```
+https://codewithyeasin.github.io/CodeWithYeasin/game/
+```
+
+That's the exact URL the README's **▶ PLAY NOW** button already points at. To check
+it locally before pushing, just double-click `game/index.html` — it runs off the
+filesystem, no server needed.
+
+**What the game is:** a top-down pixel RPG. Five rooms — Origin Wing, Arcane Tower,
+Shadow Keep, The Forge, and the Beacon. Every terminal you read tells the visitor
+something real about you. Read all three terminals in a wing and its data shard
+appears; collect four shards and the north gate opens to the ending screen, which is
+where your contact links live. Arrow keys / WASD, `E` to talk, touch controls on phones.
+
+**Where the writing lives:** `game/index.html`, in the `ENTITIES` array — look for the
+`✏️ EDIT ME` comment. Each entry has a `name` and a `pages` array; each page is one
+dialogue box. `<b>bold</b>` renders gold, `<i>italic</i>` renders cyan. The two
+`FORGE — PROJECT` entries are placeholders — put real projects there.
+
+To re-run the automated playthrough after you edit it:
+
+```bash
+npm i -D playwright && npx playwright install chromium
+node game/test.mjs      # walks the whole game, screenshots each stage
+```
 
 ## 2 · Turn on the Actions
 
@@ -133,6 +170,7 @@ the choice parser handles messy input, and the README markers still match.
 
 | Where | What |
 |:--|:--|
+| **`game/index.html` → `ENTITIES`** | **The game's dialogue. Highest impact — this is what visitors actually read.** |
 | `ACT I` | Your real origin story — the specific one, not the generic one |
 | `ACT I` base stats | Tune them honestly; honest is more impressive than maxed |
 | `ACT II` skill tree | Move nodes between `:::done` / `:::active` / `:::locked` |
