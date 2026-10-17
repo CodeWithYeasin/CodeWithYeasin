@@ -34,7 +34,7 @@
 <div align="center">
 
 <!--START_SECTION:save-->
-<img src="assets/hud.svg?v=202610171036" alt="save file — LV 11, 1,353 XP, 1 day streak" width="100%" />
+<img src="assets/hud.svg?v=202610171529" alt="save file — LV 11, 1,353 XP, 1 day streak" width="100%" />
 <!--END_SECTION:save-->
 
 <!--START_SECTION:xp-->
@@ -328,10 +328,10 @@ third-party stats service to rate-limit me into a broken image.
 <div align="center">
 
 <!--START_SECTION:cards-->
-<img src="assets/stats.svg?v=202610171036" alt="scoreboard: 82 commits, 5 pull requests, 13 repos, 1 stars" width="48%" />
-<img src="assets/languages.svg?v=202610171036" alt="languages by share of code" width="48%" />
+<img src="assets/stats.svg?v=202610171529" alt="scoreboard: 82 commits, 5 pull requests, 13 repos, 1 stars" width="48%" />
+<img src="assets/languages.svg?v=202610171529" alt="languages by share of code" width="48%" />
 
-<img src="assets/activity.svg?v=202610171036" alt="commit heatmap for the last 12 months — 99 contributions, 1 day current streak" width="100%" />
+<img src="assets/activity.svg?v=202610171529" alt="commit heatmap for the last 12 months — 99 contributions, 1 day current streak" width="100%" />
 <!--END_SECTION:cards-->
 
 </div>
