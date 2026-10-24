@@ -18,9 +18,9 @@
 <!-- ═══════════════ HUD ═══════════════ -->
 <!--START_SECTION:hud-->
 <img src="https://img.shields.io/badge/LV-11-FFB000?style=for-the-badge&labelColor=0D1117&logo=gamejolt&logoColor=white" alt="lv" />
-<img src="https://img.shields.io/badge/XP-1,408-A78BFA?style=for-the-badge&labelColor=0D1117" alt="xp" />
-<img src="https://img.shields.io/badge/STREAK-3d-F87171?style=for-the-badge&labelColor=0D1117&logo=fireship&logoColor=white" alt="streak" />
-<img src="https://img.shields.io/badge/QUESTS-13-4ADE80?style=for-the-badge&labelColor=0D1117&logo=github&logoColor=white" alt="quests" />
+<img src="https://img.shields.io/badge/XP-1,448-A78BFA?style=for-the-badge&labelColor=0D1117" alt="xp" />
+<img src="https://img.shields.io/badge/STREAK-1d-F87171?style=for-the-badge&labelColor=0D1117&logo=fireship&logoColor=white" alt="streak" />
+<img src="https://img.shields.io/badge/QUESTS-14-4ADE80?style=for-the-badge&labelColor=0D1117&logo=github&logoColor=white" alt="quests" />
 <img src="https://img.shields.io/badge/STARS-1-22D3EE?style=for-the-badge&labelColor=0D1117&logo=apachespark&logoColor=white" alt="stars" />
 <!--END_SECTION:hud-->
 
@@ -34,7 +34,7 @@
 <div align="center">
 
 <!--START_SECTION:save-->
-<img src="assets/hud.svg?v=202610240430" alt="save file — LV 11, 1,408 XP, 3 day streak" width="100%" />
+<img src="assets/hud.svg?v=202610241052" alt="save file — LV 11, 1,448 XP, 1 day streak" width="100%" />
 <!--END_SECTION:save-->
 
 <!--START_SECTION:xp-->
@@ -328,10 +328,10 @@ third-party stats service to rate-limit me into a broken image.
 <div align="center">
 
 <!--START_SECTION:cards-->
-<img src="assets/stats.svg?v=202610240430" alt="scoreboard: 93 commits, 5 pull requests, 13 repos, 1 stars" width="48%" />
-<img src="assets/languages.svg?v=202610240430" alt="languages by share of code" width="48%" />
+<img src="assets/stats.svg?v=202610241052" alt="scoreboard: 95 commits, 5 pull requests, 14 repos, 1 stars" width="48%" />
+<img src="assets/languages.svg?v=202610241052" alt="languages by share of code" width="48%" />
 
-<img src="assets/activity.svg?v=202610240430" alt="commit heatmap for the last 12 months — 110 contributions, 3 day current streak" width="100%" />
+<img src="assets/activity.svg?v=202610241052" alt="commit heatmap for the last 12 months — 113 contributions, 1 day current streak" width="100%" />
 <!--END_SECTION:cards-->
 
 </div>
